@@ -4,5 +4,7 @@
 
 package main
 
-func getInstalledApps() []string {
+func GetInstalledApps() []string {
+
+	return []
 }

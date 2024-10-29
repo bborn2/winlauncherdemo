@@ -5,14 +5,15 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"golang.org/x/sys/windows/registry"
 )
 
-func main() {
-	// 定义要查询的注册表键
+// GetInstalledApps 返回系统中所有已安装应用程序的名称
+func GetInstalledApps() []string {
+	var apps []string
+
 	keys := []string{
 		`SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`,             // 常规程序
 		`SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`, // 32位程序
@@ -28,40 +29,33 @@ func main() {
 		}
 		defer key.Close()
 
-		// 获取子键名
-		subkeys, err := key.SubKeyNames(-1)
-		if err != nil {
-			log.Printf("无法获取子键名: %v\n", err)
-			continue
-		}
+		i := 0
+		for {
+			subkeyName, err := key.EnumKey(i)
+			if err != nil {
+				break // 没有更多子键，结束循环
+			}
+			i++
 
-		// 遍历子键
-		for _, subkey := range subkeys {
-			appKey, err := registry.OpenKey(key, subkey, registry.READ)
+			appKey, err := registry.OpenKey(key, subkeyName, registry.READ)
 			if err != nil {
 				continue // 继续下一个子键
 			}
 			defer appKey.Close()
 
-			// 获取应用程序名称
+			// 获取应用程序显示名称
 			displayName, _, err := appKey.GetStringValue("DisplayName")
-			if err != nil {
-				continue // 没有显示名称，跳过
+			if err == nil && displayName != "" {
+				apps = append(apps, displayName)
+				continue
 			}
 
-			// 获取安装路径
-			installLocation, _, err := appKey.GetStringValue("InstallLocation")
-			if err != nil {
-				// 尝试获取 UninstallString 作为可执行文件路径
-				uninstallString, _, err := appKey.GetStringValue("UninstallString")
-				if err == nil {
-					fmt.Printf("Application: %s\nExecutable Path: %s\n", displayName, uninstallString)
-				}
-				continue // 没有安装路径，跳过
+			// 尝试使用其他键名来获取 Windows Store 应用的显示名称
+			appName, _, err := appKey.GetStringValue("Name")
+			if err == nil && appName != "" {
+				apps = append(apps, appName)
 			}
-
-			// 如果 InstallLocation 不为空，使用它作为可执行文件路径
-			fmt.Printf("Application: %s\nExecutable Path: %s\n", displayName, installLocation)
 		}
 	}
+	return apps
 }
