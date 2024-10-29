@@ -5,15 +5,16 @@
 package main
 
 import (
-	"log"
+	"fmt"
 
 	"golang.org/x/sys/windows/registry"
 )
 
-// GetInstalledApps 返回系统中所有已安装应用程序的名称
-func GetInstalledApps() []string {
-	var apps []string
+func GetInstalledPrograms() ([]Program, error) {
+	var programs []Program
+	programMap := make(map[string]string) // 用于去重
 
+	// 定义需要遍历的注册表路径
 	keys := []string{
 		`SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`,             // 常规程序
 		`SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`, // 32位程序
@@ -21,41 +22,63 @@ func GetInstalledApps() []string {
 		`SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore`, // Windows Store 应用
 	}
 
+	// 遍历注册表路径
 	for _, keyPath := range keys {
-		key, err := registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ)
+		programsFromKey, err := getProgramsFromRegistry(keyPath)
 		if err != nil {
-			log.Printf("无法打开注册表键 %s: %v\n", keyPath, err)
+			fmt.Printf("Error reading %s: %v\n", keyPath, err)
 			continue
 		}
-		defer key.Close()
 
-		i := 0
-		for {
-			subkeyName, err := key.EnumKey(i)
-			if err != nil {
-				break // 没有更多子键，结束循环
-			}
-			i++
-
-			appKey, err := registry.OpenKey(key, subkeyName, registry.READ)
-			if err != nil {
-				continue // 继续下一个子键
-			}
-			defer appKey.Close()
-
-			// 获取应用程序显示名称
-			displayName, _, err := appKey.GetStringValue("DisplayName")
-			if err == nil && displayName != "" {
-				apps = append(apps, displayName)
-				continue
-			}
-
-			// 尝试使用其他键名来获取 Windows Store 应用的显示名称
-			appName, _, err := appKey.GetStringValue("Name")
-			if err == nil && appName != "" {
-				apps = append(apps, appName)
+		// 去重处理
+		for _, program := range programsFromKey {
+			if _, exists := programMap[program.Name]; !exists {
+				programMap[program.Name] = program.Path
+				programs = append(programs, program)
 			}
 		}
 	}
-	return apps
+
+	return programs, nil
+}
+
+// 从指定注册表路径获取程序
+func getProgramsFromRegistry(keyPath string) ([]Program, error) {
+	var programs []Program
+
+	// 打开 LOCAL_MACHINE 注册表键
+	uninstallKey, err := registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ)
+	if err != nil {
+		return nil, err
+	}
+	defer uninstallKey.Close()
+
+	// 读取子键
+	names, err := uninstallKey.ReadSubKeyNames(-1)
+	if err != nil {
+		return nil, err
+	}
+
+	// 遍历每个子键获取 DisplayName 和 DisplayIcon
+	for _, name := range names {
+		subKey, err := registry.OpenKey(uninstallKey, name, registry.READ)
+		if err != nil {
+			continue
+		}
+		defer subKey.Close()
+
+		displayName, _, err := subKey.GetStringValue("DisplayName")
+		if err != nil || displayName == "" {
+			continue
+		}
+
+		displayPath, _, err := subKey.GetStringValue("DisplayIcon")
+		if err != nil || displayPath == "" {
+			continue
+		}
+
+		programs = append(programs, Program{Name: displayName, Path: displayPath})
+	}
+
+	return programs, nil
 }

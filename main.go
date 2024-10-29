@@ -3,18 +3,48 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 
-	"golang.org/x/sys/windows/registry"
+	"github.com/mozillazg/go-pinyin"
 )
 
 func main() {
-	installedPrograms, err := getInstalledPrograms()
+	installedPrograms, err := GetInstalledPrograms()
 	if err != nil {
 		log.Fatalf("Failed to get installed programs: %v", err)
 	}
 
-	for _, program := range installedPrograms {
-		fmt.Printf("Name: %s\nPath: %s\n\n", program.Name, program.Path)
+	// hans := "中国人民银行"
+	pyconf := pinyin.NewArgs()
+	pyconf.Heteronym = true
+	// ret := pinyin.Pinyin(hans, pyconf)
+
+	// fmt.Println(ret)
+	// fmt.Println(uniqueAndJoin(ret))
+	// return
+
+	for i := range installedPrograms {
+		// 将 pinyin 拼接到原程序名称中
+		installedPrograms[i].Name += uniqueAndJoin(pinyin.Pinyin(installedPrograms[i].Name, pyconf))
+
+		// 打印更新后的名称和路径
+		// fmt.Printf("Name: %s\nPath: %s\n\n", installedPrograms[i].Name, installedPrograms[i].Path)
+	}
+
+	var input string
+	fmt.Print("请输入 app name: ")
+	fmt.Scanln(&input)
+
+	matchedPrograms := searchPrograms(installedPrograms, input)
+
+	// 输出结果
+	if len(matchedPrograms) == 0 {
+		fmt.Println("No matching programs found.")
+	} else {
+		fmt.Println("Matching programs:")
+		for _, program := range matchedPrograms {
+			fmt.Printf("Name: %s\nPath: %s\n\n", program.Name, program.Path)
+		}
 	}
 }
 
@@ -23,75 +53,49 @@ type Program struct {
 	Path string
 }
 
-func getInstalledPrograms() ([]Program, error) {
-	var programs []Program
-	programMap := make(map[string]string) // 用于去重
+// 去重并合并二维数组中的字符串
+func uniqueAndJoin(arr [][]string) string {
+	uniqueMap := make(map[string]bool)
+	var result []string
 
-	// 定义需要遍历的注册表路径
-	keys := []string{
-		`SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`,             // 常规程序
-		`SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`, // 32位程序
-		`SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Uninstall`,   // Windows 10 应用
-		`SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore`, // Windows Store 应用
-	}
-
-	// 遍历注册表路径
-	for _, keyPath := range keys {
-		programsFromKey, err := getProgramsFromRegistry(keyPath)
-		if err != nil {
-			fmt.Printf("Error reading %s: %v\n", keyPath, err)
-			continue
-		}
-
-		// 去重处理
-		for _, program := range programsFromKey {
-			if _, exists := programMap[program.Name]; !exists {
-				programMap[program.Name] = program.Path
-				programs = append(programs, program)
+	// 遍历二维数组，将每个元素放入 map 以去重
+	for _, subArr := range arr {
+		for _, str := range subArr {
+			if _, exists := uniqueMap[str]; !exists {
+				uniqueMap[str] = true
+				result = append(result, str)
 			}
 		}
 	}
 
-	return programs, nil
+	// 使用空格连接去重后的字符串
+	return strings.Join(result, " ")
 }
 
-// 从指定注册表路径获取程序
-func getProgramsFromRegistry(keyPath string) ([]Program, error) {
-	var programs []Program
+// 判断 programName 是否包含 query 的所有字符并保持顺序
+func isFuzzyMatch(programName, query string) bool {
+	programName = strings.ToLower(programName)
+	query = strings.ToLower(query)
 
-	// 打开 LOCAL_MACHINE 注册表键
-	uninstallKey, err := registry.OpenKey(registry.LOCAL_MACHINE, keyPath, registry.READ)
-	if err != nil {
-		return nil, err
-	}
-	defer uninstallKey.Close()
+	// fmt.Println(programName, query)
 
-	// 读取子键
-	names, err := uninstallKey.ReadSubKeyNames(-1)
-	if err != nil {
-		return nil, err
+	j := 0 // query 的索引
+	for i := 0; i < len(programName) && j < len(query); i++ {
+		if programName[i] == query[j] {
+			j++
+		}
 	}
 
-	// 遍历每个子键获取 DisplayName 和 DisplayIcon
-	for _, name := range names {
-		subKey, err := registry.OpenKey(uninstallKey, name, registry.READ)
-		if err != nil {
-			continue
-		}
-		defer subKey.Close()
+	return j == len(query) // 如果 query 的所有字符都按顺序匹配到，则返回 true
+}
 
-		displayName, _, err := subKey.GetStringValue("DisplayName")
-		if err != nil || displayName == "" {
-			continue
+// 模糊搜索函数
+func searchPrograms(programs []Program, query string) []Program {
+	var results []Program
+	for _, program := range programs {
+		if isFuzzyMatch(program.Name, query) {
+			results = append(results, program)
 		}
-
-		displayPath, _, err := subKey.GetStringValue("DisplayIcon")
-		if err != nil || displayPath == "" {
-			continue
-		}
-
-		programs = append(programs, Program{Name: displayName, Path: displayPath})
 	}
-
-	return programs, nil
+	return results
 }
