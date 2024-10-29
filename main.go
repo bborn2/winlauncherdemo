@@ -31,19 +31,23 @@ func main() {
 		// fmt.Printf("Name: %s\nPath: %s\n\n", installedPrograms[i].Name, installedPrograms[i].Path)
 	}
 
-	var input string
-	fmt.Print("请输入 app name: ")
-	fmt.Scanln(&input)
+	for {
 
-	matchedPrograms := searchPrograms(installedPrograms, input)
+		var input string
+		fmt.Print("---------")
+		fmt.Print("请输入 app name: ")
+		fmt.Scanln(&input)
 
-	// 输出结果
-	if len(matchedPrograms) == 0 {
-		fmt.Println("No matching programs found.")
-	} else {
-		fmt.Println("Matching programs:")
-		for _, program := range matchedPrograms {
-			fmt.Printf("Name: %s\nPath: %s\n\n", program.Name, program.Path)
+		matchedPrograms := searchPrograms(installedPrograms, input)
+
+		// 输出结果
+		if len(matchedPrograms) == 0 {
+			fmt.Println("No matching programs found.")
+		} else {
+			fmt.Println("Matching programs:")
+			for _, program := range matchedPrograms {
+				fmt.Printf("Name: %s\nPath: %s\n\n", program.Name, program.Path)
+			}
 		}
 	}
 }
