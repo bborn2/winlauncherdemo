@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/mozillazg/go-pinyin"
 )
@@ -45,9 +46,17 @@ func main() {
 
 		if input == "quit" {
 			return
+		} else if input == "" {
+			continue
 		}
 
+		start := time.Now()
 		matchedPrograms := searchPrograms(installedPrograms, input)
+
+		elapsed := time.Since(start)
+
+		// 输出结果
+		fmt.Printf("函数执行时间: %s\n", elapsed)
 
 		// 输出结果
 		if len(matchedPrograms) == 0 {
