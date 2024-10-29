@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/mozillazg/go-pinyin"
@@ -31,12 +33,19 @@ func main() {
 		// fmt.Printf("Name: %s\nPath: %s\n\n", installedPrograms[i].Name, installedPrograms[i].Path)
 	}
 
+	reader := bufio.NewReader(os.Stdin)
 	for {
 
-		var input string
+		// var input string
 		fmt.Print("---------")
 		fmt.Print("请输入 app name: ")
-		fmt.Scanln(&input)
+		// fmt.Scanln(&input)
+		input, _ := reader.ReadString('\n') // 读取输入直到换行
+		input = strings.TrimSpace(input)
+
+		if input == "quit" {
+			return
+		}
 
 		matchedPrograms := searchPrograms(installedPrograms, input)
 
@@ -95,6 +104,7 @@ func isFuzzyMatch(programName, query string) bool {
 
 // 模糊搜索函数
 func searchPrograms(programs []Program, query string) []Program {
+	fmt.Println(query)
 	var results []Program
 	for _, program := range programs {
 		if isFuzzyMatch(program.Name, query) {
