@@ -12,6 +12,10 @@ import (
 )
 
 func main() {
+
+	Test()
+	return
+
 	installedPrograms, err := GetInstalledPrograms()
 	if err != nil {
 		log.Fatalf("Failed to get installed programs: %v", err)
