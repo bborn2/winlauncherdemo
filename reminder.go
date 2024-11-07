@@ -75,3 +75,5 @@ func AddReminder(title string, date string) int {
 func main() {
 	AddReminder("test subject", "")
 }
+
+// go build -o reminder.dll -buildmode=c-shared reminder.go
