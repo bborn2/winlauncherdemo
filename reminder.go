@@ -8,6 +8,8 @@ import (
 	// "C"
 )
 
+import "C"
+
 /*
 *
 0 for successful
