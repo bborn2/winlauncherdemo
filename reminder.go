@@ -2,13 +2,17 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
+	// "C"
 )
 
-func Test() {
+/*
+*
+0 for successful
+*/
+func AddReminder(title string, date string) int {
 	// 初始化 OLE
 	ole.CoInitialize(0)
 	defer ole.CoUninitialize()
@@ -17,14 +21,14 @@ func Test() {
 	outlookApp, err := oleutil.CreateObject("Outlook.Application")
 	if err != nil {
 		fmt.Println("Error creating Outlook application:", err)
-		return
+		return 1001
 	}
 	defer outlookApp.Release()
 
 	outlook, err := outlookApp.QueryInterface(ole.IID_IDispatch)
 	if err != nil {
 		fmt.Println("Error querying Outlook interface:", err)
-		return
+		return 1002
 	}
 	defer outlook.Release()
 
@@ -32,7 +36,7 @@ func Test() {
 	mapiNamespace, err := oleutil.CallMethod(outlook, "GetNamespace", "MAPI")
 	if err != nil {
 		fmt.Println("Error accessing MAPI namespace:", err)
-		return
+		return 1003
 	}
 	defer mapiNamespace.ToIDispatch().Release()
 
@@ -49,16 +53,23 @@ func Test() {
 	defer appointment.Release()
 
 	// 设置事件信息
-	oleutil.PutProperty(appointment, "Subject", "会议标题")
-	oleutil.PutProperty(appointment, "Location", "会议室A")
-	startTime := time.Now().Add(24 * time.Hour).Format("2006-01-02 15:04:05")
-	oleutil.PutProperty(appointment, "Start", startTime)
+	oleutil.PutProperty(appointment, "Subject", title)
+	// oleutil.PutProperty(appointment, "Location", "会议室A")
+	// startTime := time.Now().Add(24 * time.Hour).Format("2006-01-02 15:04:05")
+	// print(startTime)
+	// oleutil.PutProperty(appointment, "Start", startTime)
+	oleutil.PutProperty(appointment, "Start", date)
 	oleutil.PutProperty(appointment, "Duration", 60) // 持续时间（分钟）
-	oleutil.PutProperty(appointment, "Body", "会议内容")
+	// oleutil.PutProperty(appointment, "Body", content)
 	oleutil.PutProperty(appointment, "ReminderSet", true)
 	oleutil.PutProperty(appointment, "ReminderMinutesBeforeStart", 15)
 
 	// 保存日历事件
 	oleutil.MustCallMethod(appointment, "Save")
 	fmt.Println("Outlook 日历事件已成功添加！")
+	return 0
+}
+
+func main() {
+	AddReminder("test subject", "")
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -13,7 +14,23 @@ import (
 
 func main() {
 
-	Test()
+	// Test()
+
+	AddReminder("test subject", "")
+	return
+
+	searchKeyword := "your search keyword" // 替换为你的搜索关键字
+
+	// 调用 Outlook 并传递搜索参数
+	cmd := exec.Command("cmd", "/C", "start", "outlook.exe", "/select", "outlook:Inbox", "/search", searchKeyword)
+
+	// 运行命令
+	err := cmd.Start()
+	if err != nil {
+		fmt.Println("Error starting Outlook:", err)
+		return
+	}
+
 	return
 
 	installedPrograms, err := GetInstalledPrograms()
