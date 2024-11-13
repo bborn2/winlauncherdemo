@@ -18,7 +18,7 @@ func GetInstalledPrograms() ([]Program, error) {
 	keys := []string{
 		`SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`,             // 常规程序
 		`SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`, // 32位程序
-		// `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Uninstall`,   // Windows 10 应用
+		`SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Uninstall`,   // Windows 10 应用
 		`SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore`, // Windows Store 应用
 	}
 
