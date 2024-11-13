@@ -6,6 +6,8 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+
+	"github.com/mozillazg/go-pinyin"
 )
 
 type ProgramData struct {
@@ -25,6 +27,19 @@ func init() {
 	print(apps)
 }
 
+func openApp(app string) {
+
+	print("Start-Process \"Shell:AppsFolder\\" + app + "\"")
+
+	out, err := exec.Command("powershell", "Start-Process", "\"Shell:AppsFolder\\"+app+"\"").CombinedOutput()
+
+	if err != nil {
+		fmt.Printf("err %v\n", err)
+	}
+
+	fmt.Printf("output %s\n", out)
+}
+
 // 通过 PowerShell 获取所有开始菜单的应用
 func getStartApps() ([]ProgramData, error) {
 	// PowerShell 命令获取开始菜单应用
@@ -38,6 +53,9 @@ func getStartApps() ([]ProgramData, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	pyconf := pinyin.NewArgs()
+	pyconf.Heteronym = true
 
 	// 解析 PowerShell 输出
 	lines := strings.Split(out.String(), "\n")
@@ -55,8 +73,8 @@ func getStartApps() ([]ProgramData, error) {
 		}
 
 		program := ProgramData{
-			Name:  strings.TrimSpace(line), // 应用程序的名称
-			APPID: "",                      // 应用程序的 APPID
+			Name:  strings.TrimSpace(line) + uniqueAndJoin(pinyin.Pinyin(strings.TrimSpace(line), pyconf)), // 应用程序的名称
+			APPID: "",                                                                                      // 应用程序的 APPID
 		}
 		programs = append(programs, program)
 	}
@@ -91,8 +109,30 @@ func getStartApps() ([]ProgramData, error) {
 	return programs, nil
 }
 
+func uniqueAndJoin(arr [][]string) string {
+	uniqueMap := make(map[string]bool)
+	var result []string
+
+	// 遍历二维数组，将每个元素放入 map 以去重
+	for _, subArr := range arr {
+		for _, str := range subArr {
+			if _, exists := uniqueMap[str]; !exists {
+				uniqueMap[str] = true
+				result = append(result, str)
+			}
+		}
+	}
+
+	// 使用空格连接去重后的字符串
+	return strings.Join(result, " ")
+}
+
 func main() {
 	// 获取开始菜单应用
+
+	openApp("{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\comexp.msc")
+
+	return
 	apps, err := getStartApps()
 	if err != nil {
 		log.Fatal(err)
