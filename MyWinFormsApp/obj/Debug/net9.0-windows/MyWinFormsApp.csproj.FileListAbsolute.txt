@@ -1,0 +1,15 @@
+D:\git\winlauncherdemo\MyWinFormsApp\bin\Debug\net9.0-windows\MyWinFormsApp.exe
+D:\git\winlauncherdemo\MyWinFormsApp\bin\Debug\net9.0-windows\MyWinFormsApp.deps.json
+D:\git\winlauncherdemo\MyWinFormsApp\bin\Debug\net9.0-windows\MyWinFormsApp.runtimeconfig.json
+D:\git\winlauncherdemo\MyWinFormsApp\bin\Debug\net9.0-windows\MyWinFormsApp.dll
+D:\git\winlauncherdemo\MyWinFormsApp\bin\Debug\net9.0-windows\MyWinFormsApp.pdb
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\MyWinFormsApp.GeneratedMSBuildEditorConfig.editorconfig
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\MyWinFormsApp.AssemblyInfoInputs.cache
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\MyWinFormsApp.AssemblyInfo.cs
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\MyWinFormsApp.csproj.CoreCompileInputs.cache
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\MyWinFormsApp.sourcelink.json
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\MyWinFormsApp.dll
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\refint\MyWinFormsApp.dll
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\MyWinFormsApp.pdb
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\MyWinFormsApp.genruntimeconfig.cache
+D:\git\winlauncherdemo\MyWinFormsApp\obj\Debug\net9.0-windows\ref\MyWinFormsApp.dll

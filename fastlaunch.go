@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"syscall"
 
 	"github.com/mozillazg/go-pinyin"
 )
@@ -60,8 +61,6 @@ func searchApp(query string) []ProgramData {
 	var results []ProgramData
 	for _, program := range apps {
 
-		fmt.Println(program)
-
 		ret, weight := isFuzzyMatch(program.SearchName, query)
 		if ret {
 			program.Weight = weight
@@ -75,7 +74,11 @@ func openApp(app string) {
 
 	print("Start-Process \"Shell:AppsFolder\\" + app + "\"")
 
-	out, err := exec.Command("powershell", "Start-Process", "\"Shell:AppsFolder\\"+app+"\"").CombinedOutput()
+	cmd := exec.Command("powershell", "Start-Process", "\"Shell:AppsFolder\\"+app+"\"")
+	// .CombinedOutput()
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+
+	out, err := cmd.CombinedOutput()
 
 	if err != nil {
 		fmt.Printf("err %v\n", err)
@@ -88,6 +91,7 @@ func openApp(app string) {
 func getStartApps() ([]ProgramData, error) {
 	// PowerShell 命令获取开始菜单应用
 	cmd := exec.Command("powershell", "chcp 65001; Get-StartApps | Select Name")
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -126,6 +130,7 @@ func getStartApps() ([]ProgramData, error) {
 	}
 
 	cmd = exec.Command("powershell", "chcp 65001; Get-StartApps | Select AppID")
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
 	var out2 bytes.Buffer
 	cmd.Stdout = &out2
@@ -233,3 +238,7 @@ func main() {
 
 	// return
 }
+
+// go build -o .\MyWinFormsApp\bin\Debug\net9.0-windows\fastlaunch.dll -buildmode=c-shared .\fastlaunch.go
+
+// MyWinFormsApp> dotnet run
