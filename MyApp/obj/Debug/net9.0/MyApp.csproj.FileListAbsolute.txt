@@ -1,0 +1,15 @@
+D:\git\winlauncherdemo\MyApp\bin\Debug\net9.0\MyApp.exe
+D:\git\winlauncherdemo\MyApp\bin\Debug\net9.0\MyApp.deps.json
+D:\git\winlauncherdemo\MyApp\bin\Debug\net9.0\MyApp.runtimeconfig.json
+D:\git\winlauncherdemo\MyApp\bin\Debug\net9.0\MyApp.dll
+D:\git\winlauncherdemo\MyApp\bin\Debug\net9.0\MyApp.pdb
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\MyApp.GeneratedMSBuildEditorConfig.editorconfig
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\MyApp.AssemblyInfoInputs.cache
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\MyApp.AssemblyInfo.cs
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\MyApp.csproj.CoreCompileInputs.cache
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\MyApp.sourcelink.json
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\MyApp.dll
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\refint\MyApp.dll
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\MyApp.pdb
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\MyApp.genruntimeconfig.cache
+D:\git\winlauncherdemo\MyApp\obj\Debug\net9.0\ref\MyApp.dll

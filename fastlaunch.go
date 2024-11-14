@@ -9,6 +9,8 @@ import (
 	"github.com/mozillazg/go-pinyin"
 )
 
+import "C"
+
 type ProgramData struct {
 	Name       string
 	SearchName string
@@ -18,18 +20,55 @@ type ProgramData struct {
 
 var apps []ProgramData
 
-func loadApps() {
+//export loadApps
+func loadApps() int {
 	a, err := getStartApps()
 	apps = a
 
 	if err != nil {
 		print("err code : 1200")
+		return 1
 	}
 
-	for _, a := range apps {
-		fmt.Println(a)
-	}
+	return 0
+
+	// for _, a := range apps {
+	// 	fmt.Println(a)
+	// }
 	// fmt.Println(apps)
+}
+
+//export searchAndRun
+func searchAndRun(queryChar *C.char) int {
+	query := C.GoString(queryChar)
+
+	app := searchApp(query)
+	// fmt.Println(app)
+
+	if len(app) > 0 {
+		openApp(app[0].APPID)
+
+		return 1
+	}
+
+	return 0
+}
+
+// 模糊搜索函数
+func searchApp(query string) []ProgramData {
+	// fmt.Println(query)
+	var results []ProgramData
+	for _, program := range apps {
+
+		fmt.Println(program)
+
+		ret, weight := isFuzzyMatch(program.SearchName, query)
+		if ret {
+			program.Weight = weight
+			results = insertInOrder(results, program)
+		}
+	}
+	return results
 }
 
 func openApp(app string) {
@@ -43,23 +82,6 @@ func openApp(app string) {
 	}
 
 	fmt.Printf("output %s\n", out)
-}
-
-// 模糊搜索函数
-func searchApp(query string) []ProgramData {
-	fmt.Println(query)
-	var results []ProgramData
-	for _, program := range apps {
-
-		fmt.Println(program)
-
-		ret, weight := isFuzzyMatch(program.SearchName, query)
-		if ret {
-			program.Weight = weight
-			results = insertInOrder(results, program)
-		}
-	}
-	return results
 }
 
 // 通过 PowerShell 获取所有开始菜单的应用
@@ -200,16 +222,14 @@ func insertInOrder(items []ProgramData, newItem ProgramData) []ProgramData {
 }
 
 func main() {
-	// 获取开始菜单应用
+	// loadApps()
 
-	loadApps()
+	// app := searchApp("word")
+	// fmt.Println(app)
 
-	app := searchApp("word")
-	fmt.Println(app)
+	// if len(app) > 0 {
+	// 	openApp(app[0].APPID)
+	// }
 
-	if len(app) > 0 {
-		openApp(app[0].APPID)
-	}
-
-	return
+	// return
 }
