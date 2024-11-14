@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 
@@ -11,20 +10,26 @@ import (
 )
 
 type ProgramData struct {
-	Name  string
-	APPID string
+	Name       string
+	SearchName string
+	APPID      string
+	Weight     int
 }
 
 var apps []ProgramData
 
-func init() {
-	apps, err := getStartApps()
+func loadApps() {
+	a, err := getStartApps()
+	apps = a
 
 	if err != nil {
 		print("err code : 1200")
 	}
 
-	print(apps)
+	for _, a := range apps {
+		fmt.Println(a)
+	}
+	// fmt.Println(apps)
 }
 
 func openApp(app string) {
@@ -38,6 +43,23 @@ func openApp(app string) {
 	}
 
 	fmt.Printf("output %s\n", out)
+}
+
+// 模糊搜索函数
+func searchApp(query string) []ProgramData {
+	fmt.Println(query)
+	var results []ProgramData
+	for _, program := range apps {
+
+		fmt.Println(program)
+
+		ret, weight := isFuzzyMatch(program.SearchName, query)
+		if ret {
+			program.Weight = weight
+			results = insertInOrder(results, program)
+		}
+	}
+	return results
 }
 
 // 通过 PowerShell 获取所有开始菜单的应用
@@ -73,8 +95,10 @@ func getStartApps() ([]ProgramData, error) {
 		}
 
 		program := ProgramData{
-			Name:  strings.TrimSpace(line) + uniqueAndJoin(pinyin.Pinyin(strings.TrimSpace(line), pyconf)), // 应用程序的名称
-			APPID: "",                                                                                      // 应用程序的 APPID
+			Name:       strings.TrimSpace(line),
+			SearchName: strings.TrimSpace(line) + uniqueAndJoin(pinyin.Pinyin(strings.TrimSpace(line), pyconf)), // 应用程序的名称
+			APPID:      "",
+			Weight:     0, // 应用程序的 APPID
 		}
 		programs = append(programs, program)
 	}
@@ -127,20 +151,65 @@ func uniqueAndJoin(arr [][]string) string {
 	return strings.Join(result, " ")
 }
 
+// 判断 programName 是否包含 query 的所有字符并保持顺序
+func isFuzzyMatch(programName, query string) (bool, int) {
+	programName = strings.ToLower(programName)
+	query = strings.ToLower(query)
+
+	// fmt.Println(programName, query)
+
+	weight := 0
+
+	delta := -1
+	j := 0 // query 的索引
+	for i := 0; i < len(programName) && j < len(query); i++ {
+		if programName[i] == query[j] {
+
+			if i-j == delta {
+				weight += 10
+			} else {
+
+				delta = i - j
+			}
+
+			j++
+		}
+
+		if j == len(query) {
+			break
+		}
+	}
+
+	return j == len(query), weight // 如果 query 的所有字符都按顺序匹配到，则返回 true
+}
+
+// 按照 Weight 值顺序插入数据
+func insertInOrder(items []ProgramData, newItem ProgramData) []ProgramData {
+	// 找到第一个 Weight 大于 newItem.Weight 的位置
+	index := 0
+	for i, item := range items {
+		if item.Weight < newItem.Weight {
+			index = i
+			break
+		}
+		index = i + 1
+	}
+	// 插入数据到指定位置，保持顺序
+	items = append(items[:index], append([]ProgramData{newItem}, items[index:]...)...)
+	return items
+}
+
 func main() {
 	// 获取开始菜单应用
 
-	openApp("{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\comexp.msc")
+	loadApps()
+
+	app := searchApp("word")
+	fmt.Println(app)
+
+	if len(app) > 0 {
+		openApp(app[0].APPID)
+	}
 
 	return
-	apps, err := getStartApps()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// 输出所有应用名称
-	// fmt.Println("Start Menu Applications:")
-	for _, app := range apps {
-		fmt.Println(app)
-	}
 }
