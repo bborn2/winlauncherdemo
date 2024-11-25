@@ -10,14 +10,14 @@ class Program
     // public static extern void PrintMessage(string msg);
     public static extern void loadApps();
 
-    [DllImport("fastlaunch.dll", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("fastlaunch.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
     public static extern int searchAndRun(string query);
 
     static void Main()
     {
         loadApps();
 
-        int result = searchAndRun("word");
+        int result = searchAndRun("huat");
         // int result = Add(1,2);
         // Console.WriteLine("Result: " + result);  // 输出结果应该是 8
 

@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"unicode/utf16"
+	"unsafe"
 
 	"github.com/mozillazg/go-pinyin"
 )
@@ -40,8 +42,9 @@ func loadApps() int {
 }
 
 //export searchAndRun
-func searchAndRun(queryChar *C.char) int {
-	query := C.GoString(queryChar)
+func searchAndRun(queryChar *C.wchar_t) int {
+	// query := C.GoString(queryChar)
+	query := getString(queryChar)
 
 	app := searchApp(query)
 	// fmt.Println(app)
@@ -53,6 +56,27 @@ func searchAndRun(queryChar *C.char) int {
 	}
 
 	return 0
+}
+
+func getString(input *C.wchar_t) string {
+
+	length := 0
+
+	ptr := uintptr(unsafe.Pointer(input))
+	for *(*uint16)(unsafe.Pointer(ptr + uintptr(length*2))) != 0 {
+		length++
+	}
+
+	// Step 2: 将 UTF-16 数据读取到 uint16 数组中
+	utf16Data := make([]uint16, length)
+	for i := 0; i < length; i++ {
+		utf16Data[i] = *(*uint16)(unsafe.Pointer(ptr + uintptr(i*2)))
+	}
+
+	// Step 3: 将 UTF-16 转换为 Go 字符串（UTF-8）
+	goStr := string(utf16.Decode(utf16Data))
+
+	return goStr
 }
 
 // 模糊搜索函数

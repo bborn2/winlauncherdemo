@@ -75,7 +75,7 @@ extern "C" {
 #endif
 
 extern __declspec(dllexport) GoInt loadApps();
-extern __declspec(dllexport) GoInt searchAndRun(char* queryChar);
+extern __declspec(dllexport) GoInt searchAndRun(wchar_t* queryChar);
 
 #ifdef __cplusplus
 }
