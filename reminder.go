@@ -6,6 +6,9 @@ import "C"
 import (
 	"fmt"
 
+	"net/url"
+	"os/exec"
+
 	"github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 )
@@ -27,11 +30,27 @@ func PrintMessage(msg *C.char) {
 	fmt.Println("Message from C#: ", message)
 }
 
+func test() {
+	ole.CoInitialize(0)
+	defer ole.CoUninitialize()
+
+	// 打开 Outlook 应用
+	outlookApp, err := oleutil.CreateObject("Outlook.Application")
+	// outlookApp, err := oleutil.GetActiveObject("Outlook.Application")
+	if err != nil {
+		fmt.Println("Error creating Outlook application:", err)
+		return
+	}
+	defer outlookApp.Release()
+}
+
 //export AddReminder
 func AddReminder(titleChar, dateChar *C.char) int {
 
 	title := C.GoString(titleChar)
 	date := C.GoString(dateChar)
+
+	print(title, date)
 
 	// C.free(unsafe.Pointer(titleChar))
 	// c.free(unsafe.Pointer(dateChar))
@@ -41,7 +60,8 @@ func AddReminder(titleChar, dateChar *C.char) int {
 	defer ole.CoUninitialize()
 
 	// 打开 Outlook 应用
-	outlookApp, err := oleutil.CreateObject("Outlook.Application")
+	// outlookApp, err := oleutil.CreateObject("Outlook.Application")
+	outlookApp, err := oleutil.GetActiveObject("Outlook.Application")
 	if err != nil {
 		fmt.Println("Error creating Outlook application:", err)
 		return 1001
@@ -93,8 +113,34 @@ func AddReminder(titleChar, dateChar *C.char) int {
 	return 0
 }
 
+func test2() {
+	icsContent := `
+BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:Team Meeting
+DTSTART:20241120T100000Z
+DTEND:20241120T110000Z
+LOCATION:Conference Room
+DESCRIPTION:Monthly team meeting.
+END:VEVENT
+END:VCALENDAR`
+
+	mailTo := fmt.Sprintf("mailto:?subject=%s&body=%s",
+		url.QueryEscape("Meeting Reminder"),
+		url.QueryEscape(icsContent),
+	)
+
+	// Open in default mail client
+	err := exec.Command("rundll32", "url.dll,FileProtocolHandler", mailTo).Start()
+	if err != nil {
+		fmt.Println("Failed to open mail client:", err)
+	}
+}
+
 func main() {
-	// AddReminder("test subject", "")
+	AddReminder(C.CString("test subject"), C.CString("2024-11-18 13:00:00"))
+	// test2()
 }
 
 // go build -o ./reminder.dll -buildmode=c-shared reminder.go
