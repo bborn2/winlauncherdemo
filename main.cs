@@ -17,7 +17,7 @@ class Program
     {
         loadApps();
 
-        int result = searchAndRun("huat");
+        int result = searchAndRun("画图");
         // int result = Add(1,2);
         // Console.WriteLine("Result: " + result);  // 输出结果应该是 8
 

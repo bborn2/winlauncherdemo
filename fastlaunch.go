@@ -45,6 +45,7 @@ func loadApps() int {
 func searchAndRun(queryChar *C.wchar_t) int {
 	// query := C.GoString(queryChar)
 	query := getString(queryChar)
+	fmt.Print(query)
 
 	app := searchApp(query)
 	// fmt.Println(app)

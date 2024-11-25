@@ -5,6 +5,8 @@ package main
 import "C"
 import (
 	"fmt"
+	"unicode/utf16"
+	"unsafe"
 
 	"net/url"
 	"os/exec"
@@ -45,10 +47,10 @@ func test() {
 }
 
 //export AddReminder
-func AddReminder(titleChar, dateChar *C.char) int {
+func AddReminder(titleChar, dateChar *C.wchar_t) int {
 
-	title := C.GoString(titleChar)
-	date := C.GoString(dateChar)
+	title := getString(titleChar)
+	date := getString(dateChar)
 
 	print(title, date)
 
@@ -60,8 +62,8 @@ func AddReminder(titleChar, dateChar *C.char) int {
 	defer ole.CoUninitialize()
 
 	// 打开 Outlook 应用
-	// outlookApp, err := oleutil.CreateObject("Outlook.Application")
-	outlookApp, err := oleutil.GetActiveObject("Outlook.Application")
+	outlookApp, err := oleutil.CreateObject("Outlook.Application")
+	// outlookApp, err := oleutil.GetActiveObject("Outlook.Application")
 	if err != nil {
 		fmt.Println("Error creating Outlook application:", err)
 		return 1001
@@ -113,6 +115,27 @@ func AddReminder(titleChar, dateChar *C.char) int {
 	return 0
 }
 
+func getString(input *C.wchar_t) string {
+
+	length := 0
+
+	ptr := uintptr(unsafe.Pointer(input))
+	for *(*uint16)(unsafe.Pointer(ptr + uintptr(length*2))) != 0 {
+		length++
+	}
+
+	// Step 2: 将 UTF-16 数据读取到 uint16 数组中
+	utf16Data := make([]uint16, length)
+	for i := 0; i < length; i++ {
+		utf16Data[i] = *(*uint16)(unsafe.Pointer(ptr + uintptr(i*2)))
+	}
+
+	// Step 3: 将 UTF-16 转换为 Go 字符串（UTF-8）
+	goStr := string(utf16.Decode(utf16Data))
+
+	return goStr
+}
+
 func test2() {
 	icsContent := `
 BEGIN:VCALENDAR
@@ -139,7 +162,7 @@ END:VCALENDAR`
 }
 
 func main() {
-	AddReminder(C.CString("test subject"), C.CString("2024-11-18 13:00:00"))
+	// AddReminder(C.CString("和川普吃烧烤"), C.CString("2024-11-28 13:00:00"))
 	// test2()
 }
 
