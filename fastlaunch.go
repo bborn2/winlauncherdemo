@@ -45,6 +45,11 @@ func loadApps() int {
 func searchAndRun(queryChar *C.wchar_t) int {
 	// query := C.GoString(queryChar)
 	query := getString(queryChar)
+
+	if query == "我要上网" || query == "上网" || query == "浏览器" {
+		query = "edge"
+	}
+
 	fmt.Print(query)
 
 	app := searchApp(query)
