@@ -75,7 +75,7 @@ extern "C" {
 #endif
 
 extern __declspec(dllexport) void PrintMessage(char* msg);
-extern __declspec(dllexport) GoInt AddReminder(wchar_t* titleChar, wchar_t* dateChar);
+extern __declspec(dllexport) GoInt AddReminder(wchar_t* titleChar, wchar_t* dateChar, wchar_t* locationChar, wchar_t* attendeeChar, GoInt dur);
 
 #ifdef __cplusplus
 }

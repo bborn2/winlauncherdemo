@@ -5,6 +5,7 @@ package main
 import "C"
 import (
 	"fmt"
+	"strings"
 	"unicode/utf16"
 	"unsafe"
 
@@ -47,12 +48,18 @@ func test() {
 }
 
 //export AddReminder
-func AddReminder(titleChar, dateChar *C.wchar_t) int {
+func AddReminder(titleChar, dateChar, locationChar, attendeeChar *C.wchar_t, dur int) int {
 
 	title := getString(titleChar)
 	date := getString(dateChar)
+	location := getString(locationChar)
+	attendees := getString(attendeeChar)
 
-	print(title, date)
+	if dur == 0 {
+		dur = 60
+	}
+
+	print(title, date, location, attendees)
 
 	// C.free(unsafe.Pointer(titleChar))
 	// c.free(unsafe.Pointer(dateChar))
@@ -104,15 +111,41 @@ func AddReminder(titleChar, dateChar *C.wchar_t) int {
 	// print(startTime)
 	// oleutil.PutProperty(appointment, "Start", startTime)
 	oleutil.PutProperty(appointment, "Start", date)
-	oleutil.PutProperty(appointment, "Duration", 60) // 持续时间（分钟）
+	oleutil.PutProperty(appointment, "Duration", dur) // 持续时间（分钟）
+
+	if strings.TrimSpace(location) != "" {
+		oleutil.PutProperty(appointment, "Location", location)
+	}
 	// oleutil.PutProperty(appointment, "Body", content)
 	oleutil.PutProperty(appointment, "ReminderSet", true)
 	oleutil.PutProperty(appointment, "ReminderMinutesBeforeStart", 15)
+
+	// 添加与会人
+	attendeelist := strings.Split(attendees, ",")
+
+	if len(attendeelist) > 0 {
+		recipients := oleutil.MustGetProperty(appointment, "Recipients").ToIDispatch()
+		defer recipients.Release()
+
+		for _, a := range attendeelist {
+			// 添加必需与会人
+			addRecipient(recipients, a, 1) // 必需与会人
+		}
+
+	}
 
 	// 保存日历事件
 	oleutil.MustCallMethod(appointment, "Save")
 	fmt.Println("Outlook 日历事件已成功添加！", date)
 	return 0
+}
+
+func addRecipient(recipients *ole.IDispatch, email string, recipientType int) {
+	recipient := oleutil.MustCallMethod(recipients, "Add", email).ToIDispatch()
+	defer recipient.Release()
+
+	// 设置与会人类型
+	oleutil.PutProperty(recipient, "Type", recipientType)
 }
 
 func getString(input *C.wchar_t) string {
