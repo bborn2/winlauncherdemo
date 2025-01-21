@@ -123,7 +123,11 @@ func AddReminder(titleChar, dateChar, locationChar, attendeeChar *C.wchar_t, dur
 	// 添加与会人
 	attendeelist := strings.Split(attendees, ",")
 
-	if len(attendeelist) > 0 {
+	// fmt.Println(attendees)
+	// fmt.Println(attendeelist)
+	// fmt.Println(len(attendeelist))
+
+	if len(attendees) > 0 && len(attendeelist) > 0 {
 		recipients := oleutil.MustGetProperty(appointment, "Recipients").ToIDispatch()
 		defer recipients.Release()
 
@@ -195,7 +199,8 @@ END:VCALENDAR`
 }
 
 func main() {
-	// AddReminder(C.CString("和川普吃烧烤"), C.CString("2024-11-28 13:00:00"))
+
+	// AddReminder((*C.wchar_t)(C.CString("和川普吃烧烤")), C.CString("2024-11-28 13:00:00"), C.CString("loc"), C.CString(""), 20)
 	// test2()
 }
 

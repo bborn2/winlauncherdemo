@@ -9,7 +9,7 @@ class Program
  
     static void Main()
     {
-        int result = AddReminder("和YY讨论问题", "2024-11-26 14:00:00", "巴黎会议室", "海总,YY,other", 80);
+        int result = AddReminder("和YY讨论问题", "2024-11-26 14:00:00", "巴黎会议室", "", 80);
         Console.WriteLine("Result: " + result);  // 输出结果应该是 8
         Console.ReadLine();
     }
