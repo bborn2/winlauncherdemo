@@ -4,11 +4,16 @@ package main
 
 import "C"
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
+	"time"
 	"unicode/utf16"
 	"unsafe"
 
+	"net/http"
 	"net/url"
 	"os/exec"
 
@@ -47,13 +52,107 @@ func test() {
 	defer outlookApp.Release()
 }
 
+type Event struct {
+	Type     string `json:"type"`
+	Start    string `json:"start"`
+	End      string `json:"end"`
+	Subject  string `json:"subject"`
+	Attendee string `json:"attendee"`
+	Loc      string `json:"loc"`
+}
+
 //export AddReminder
 func AddReminder(titleChar, dateChar, locationChar, attendeeChar *C.wchar_t, dur int) int {
-
 	title := getString(titleChar)
 	date := getString(dateChar)
-	location := getString(locationChar)
-	attendees := getString(attendeeChar)
+
+	location := ""
+	attendees := ""
+
+	if locationChar != nil {
+		location = getString(locationChar)
+	}
+
+	if attendeeChar != nil {
+		attendees = getString(attendeeChar)
+	}
+
+	if dur == 0 {
+		dur = 60
+	}
+
+	layout := "2006-01-02 15:04"
+	startTime, err := time.Parse(layout, date)
+	if err != nil {
+		fmt.Println("Error parsing time:", err)
+		return 10005
+	}
+
+	// 增加 60 分钟
+	newTime := startTime.Add(60 * time.Minute)
+
+	// 将新的时间格式化为字符串
+	endTime := newTime.Format(layout)
+
+	event := Event{
+		Type:     "message",
+		Start:    date,
+		End:      endTime,
+		Subject:  title,
+		Attendee: "",
+	}
+
+	payload, err := json.Marshal(event)
+	if err != nil {
+		fmt.Println("Error marshaling event:", err)
+		return 10001
+	}
+
+	print(title, date, location, attendees)
+
+	url := "https://prod-36.southeastasia.logic.azure.com:443/workflows/bcc42eb831944554bcf829448bdee660/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=lsWQYvO_A4rT_0Td1s6l2oBWTL28tKt9-etzpCEvKck"
+	method := "POST"
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, bytes.NewReader(payload))
+
+	if err != nil {
+		fmt.Println(err)
+		return 10002
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return 10003
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return 10004
+	}
+	fmt.Println(string(body))
+
+	return 0
+}
+
+func oldAddReminder(titleChar, dateChar, locationChar, attendeeChar *C.wchar_t, dur int) int {
+	title := getString(titleChar)
+	date := getString(dateChar)
+
+	location := ""
+	attendees := ""
+
+	if locationChar != nil {
+		location = getString(locationChar)
+	}
+
+	if attendeeChar != nil {
+		attendees = getString(attendeeChar)
+	}
 
 	if dur == 0 {
 		dur = 60
@@ -200,8 +299,10 @@ END:VCALENDAR`
 
 func main() {
 
-	// AddReminder((*C.wchar_t)(C.CString("和川普吃烧烤")), C.CString("2024-11-28 13:00:00"), C.CString("loc"), C.CString(""), 20)
+	// AddReminder((*C.wchar_t)(C.CString("和川普吃烧烤")), C.CString("2025-02-26 13:00:00"), C.CString("loc"), C.CString(""), 20)
 	// test2()
 }
 
+// 安装gcc
+//
 // go build -o ./reminder.dll -buildmode=c-shared reminder.go
