@@ -157,8 +157,9 @@ func localTime(ts int64) string {
 }
 
 func main() {
+	emails := []string{"songkun2@lenovo.com", "wangsy91@lenovo.com", "shijun7@lenovo.com"}
 
-	jsonData, ret := req([]string{"songkun2@lenovo.com", "wangsy91@lenovo.com", "shijun7@lenovo.com"}, "2025-03-07")
+	jsonData, ret := getSchedule(emails, "2025-03-07")
 
 	if ret != 0 {
 		fmt.Print("req error ", ret)
@@ -222,9 +223,11 @@ func main() {
 	// } else {
 	// 	fmt.Println("No available meeting slot found.")
 	// }
+
+	createEvent(emails, availableSlots.start*1000, availableSlots.end*1000, "[AINow] test")
 }
 
-func req(emails []string, dateStr string) (string, int) {
+func getSchedule(emails []string, dateStr string) (string, int) {
 
 	url := "https://dev.cochat.lenovo.com/calendar/api/calendar/getschedule"
 	method := "POST"
@@ -281,4 +284,53 @@ func req(emails []string, dateStr string) (string, int) {
 	}
 	// fmt.Println(string(body))
 	return string(body), 0
+}
+
+func createEvent(emails []string, startTs int64, endTs int64, topic string) int {
+	url := "https://dev.cochat.lenovo.com/calendar/api/calendar/sendevent"
+	method := "POST"
+
+	if len(emails) < 1 {
+		return -2
+	}
+
+	emailStr := strings.Join(emails, ";")
+
+	params := fmt.Sprintf(`{
+		"Subject": "%s",
+		"Body": "<p><br></p>",
+		"Location": "",
+		"Start": %d,
+		"End": %d,
+		"ReminderMinutesBeforeStart": 15,
+		"RequiredAttendees": "%s",
+		"Token":"EpbF0q/M3haVMwUV0ca/IwmbZ7PMjhMVcF4TTObheOVSFrR0XObIyCJAhRjlwZdpJ1C6xC8izIXml2HuUgUdJ0/HkGjO3sz1XV8Ca4p/xi0ThnL/M9yNALN2MCMnGGJO1nlGMrraoarONSV8GQ++AUKANsgVYR8pbDndyTnF/H/5ziHtBP9jwzcOxuSNlYV56pmK0YhjYShYsZpP4uPRPsm+kcmRWT3NlWnqBAnuSFvDnO6WWG/2deTr3VD3GOToaRrhKWSKHpcA+k0JcnGmCTFMPRFk+Qhs0z+cPR3Qnyxn1xYkndmgKfVntkiYgH0fIUbWpCxCRUz0940xKYy4MQ==myhubeyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcyI6bnVsbCwidXNlcl9uYW1lIjoic29uZ2t1bjIiLCJzY29wZSI6WyJhbGwiXSwiZXh0cmEiOiIlN0IlMjJleF9lbk5hbWUlMjIlM0ElMjJLdW4rS3VuMitTb25nJTIyJTJDJTIyZXhfbWFpbCUyMiUzQSUyMnNvbmdrdW4yJTQwbGVub3ZvLmNvbSUyMiUyQyUyMmV4X2NuTmFtZSUyMiUzQSUyMiVFNSVBRSU4QiVFNSVBMCU4MyUyMiUyQyUyMmV4X2NvdW50cnklMjIlM0ElMjJDTiUyMiU3RCIsImV4cCI6MTc0OTg3MTI0OSwianRpIjoiYmQzOWRkOTEtNzU1Ni00Y2E3LTkzMGYtNzM1YzNmM2Y5NzhmIiwiY2xpZW50X2lkIjoiY2xpZW50LWFwcCJ9.TiZ8vr8lyyxECobT-co0GzczpXd7jcTl3RPEMgQvM3IjpmXUiRaK4warNwNUU-7pOLbMa8TLhrOmJo-aeh1ZkzSU8_sjwaOc0fbcr-f41J1sONc6Yd5pMQj7Zm2iAcUWmBbEQWXDC76Y7dqCEGPUjQlJYaXLrMuE6kyXViQj7u3DSqRGS_TU6Qn21fhducsKxCOq2g4Y5mJj-Oqr-bUDNpv5jnkE9Rdycgy4b3rxKrVL8hdEeyhxmdOYF82x5acMGHFSo1bOE1F4WoX3GHvNf5i8ln5fUEEXyE6FNEuiW7pwsmg2qB9nnFgLIFlQSTaQGxVTiC43v_Pvq881WhWwUw"}`,
+		topic, startTs, endTs, emailStr)
+
+	payload := strings.NewReader(params)
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, payload)
+
+	if err != nil {
+		fmt.Println(err)
+		return -3
+	}
+	req.Header.Add("loc", "O365")
+	req.Header.Add("Content-Type", "application/json")
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return -4
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return -5
+	}
+	fmt.Println(string(body))
+	return 0
 }
