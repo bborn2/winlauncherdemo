@@ -5,11 +5,11 @@ class Program
 {
 
     [DllImport("cale.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
-    public static extern int AddCale(string  topic, string date, string attendees);
+    public static extern long AddCale(string  topic, string date, string attendees);
   
     static void Main()
     {
-        int result = AddCale("meeting invitation", "2025-03-10", "shuangyang;song kun;lihua");
+        long result = AddCale("meeting invitation", "2025-03-10", "shuangyang;song kun;lihua");
         Console.WriteLine("Result: " + result);
         Console.ReadLine();
     }

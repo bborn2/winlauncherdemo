@@ -74,7 +74,7 @@ typedef struct { void *data; GoInt len; GoInt cap; } GoSlice;
 extern "C" {
 #endif
 
-extern __declspec(dllexport) GoInt AddCale(wchar_t* titleChar, wchar_t* dateChar, wchar_t* attendeeChar);
+extern __declspec(dllexport) GoInt64 AddCale(wchar_t* titleChar, wchar_t* dateChar, wchar_t* attendeeChar);
 
 #ifdef __cplusplus
 }

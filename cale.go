@@ -306,7 +306,7 @@ func createEvent(emails []string, startTs int64, endTs int64, topic string) int 
 	method := "POST"
 
 	if len(emails) < 1 {
-		return -2
+		return -20
 	}
 
 	emailStr := strings.Join(emails, ";")
@@ -329,7 +329,7 @@ func createEvent(emails []string, startTs int64, endTs int64, topic string) int 
 
 	if err != nil {
 		fmt.Println(err)
-		return -3
+		return -21
 	}
 	req.Header.Add("loc", "O365")
 	req.Header.Add("Content-Type", "application/json")
@@ -337,14 +337,14 @@ func createEvent(emails []string, startTs int64, endTs int64, topic string) int 
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return -4
+		return -22
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
-		return -5
+		return -23
 	}
 	fmt.Println(string(body))
 	return 0
@@ -357,7 +357,7 @@ func parseData(emails []string, dateStr string) (timeInterval, int) {
 
 	if ret != 0 {
 		fmt.Print("req error ", ret)
-		return timeInterval{}, 100
+		return timeInterval{}, -30
 	}
 
 	var response Response
@@ -411,14 +411,14 @@ func parseData(emails []string, dateStr string) (timeInterval, int) {
 	fmt.Printf("Available meeting time: %s - %s\n", localTime(availableSlots.start), localTime(availableSlots.end))
 
 	if availableSlots.start == 0 {
-		return timeInterval{}, 101
+		return timeInterval{}, -31
 	}
 
 	return availableSlots, 0
 }
 
 //export AddCale
-func AddCale(titleChar, dateChar, attendeeChar *C.wchar_t) int {
+func AddCale(titleChar, dateChar, attendeeChar *C.wchar_t) int64 {
 
 	title := getString(titleChar)
 	date := getString(dateChar)
@@ -480,9 +480,10 @@ func AddCale(titleChar, dateChar, attendeeChar *C.wchar_t) int {
 
 	if ret == 0 {
 		ret = createEvent(emails, availableSlots.start*1000, availableSlots.end*1000, "[AINow] "+title)
+		return availableSlots.start
+	} else {
+		return int64(ret)
 	}
-
-	return ret
 }
 
 // go build -o ./cale.dll -buildmode=c-shared cale.go
